@@ -1,3 +1,64 @@
+```mermaid
+flowchart TD
+    Start([python3 a_maze_ing.py<br>config.txt])
+    Parser{parse config.txt}
+    Error1[print error & exit program]
+    GridInit[initialize 2d grid & set bounds]
+    Check42{can 42 pattern fit?}
+    Error2[print error: grid too small]
+    GenMode{check PERFECT flag}
+    PerfMaze[generate perfect maze]
+    PlayMaze[generate playable maze]
+    Embed42[embed 42 pattern]
+    Solver[run pathfinding solver]
+    HexEncode[encode walls to xexadecimal]
+    WriteFile[write to output_file]
+    VisualRender[launch visual interface]
+    Interaction{user interactions}
+    ReGen[generate new maze]
+    VisPath[show/hide shortest path]
+    VisColor[update wall colors]
+    EndNode([exit program])
+
+    Start --> Parser
+    
+    Parser -->|invalid / missing| Error1
+    Parser -->|valid data| GridInit
+    
+    GridInit --> Check42
+    
+    Check42 -->|no| Error2
+    Check42 -->|yes| GenMode
+    
+    GenMode -->|PERFECT=True| PerfMaze
+    GenMode -->|PERFECT=False| PlayMaze
+    
+    PerfMaze --> Embed42
+    PlayMaze --> Embed42
+    
+    Embed42 --> Solver
+    Solver --> HexEncode
+    HexEncode --> WriteFile
+    WriteFile --> Interaction
+    
+    Interaction --> ReGen
+    ReGen --> GenMode
+    
+    Interaction --> VisPath
+    VisPath --> VisualRender
+    
+    Interaction --> VisColor
+    VisColor --> VisualRender
+    
+    Interaction --> EndNode
+
+    class Start,EndNode startEnd;
+    class Error1,Error2 errorNode;
+    class GridInit,PerfMaze,PlayMaze,Embed42,Solver,HexEncode,WriteFile,VisualRender,ReGen,VisPath,VisColor processNode;
+    class Parser,Check42,GenMode,Interaction decisionNode;
+```
+
+
 # GUIDE
 
 "Interestingly, perfect mazes (with one unique path between any two points) are directly related to spanning trees in graph theory."

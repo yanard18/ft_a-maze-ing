@@ -1,5 +1,5 @@
 PYTHON = python3
-SCRIPT = main.py
+SCRIPT = test.py
 CONFIG = config.txt
 
 
@@ -17,15 +17,15 @@ clean:
 	rm -rf .mypy_cache
 
 lint:
-	flake8 main.py
+	flake8 test.py
 	mypy --warn-return-any \
 	     --warn-unused-ignores \
 	     --ignore-missing-imports \
 	     --disallow-untyped-defs \
-	     --check-untyped-defs main.py
+	     --check-untyped-defs test.py
 
 lint-strict:
-	flake8 main.py
-	mypy --strict main.py
+	flake8 test.py
+	mypy --strict test.py
 
 .PHONY: install run debug clean lint lint-strict

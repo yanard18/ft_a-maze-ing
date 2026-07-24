@@ -1,5 +1,6 @@
 PYTHON = python3
-SCRIPT = test.py
+SCRIPT = a_maze_ing.py
+FILES = test.py mazegen.py a_maze_ing.py
 CONFIG = config.txt
 
 
@@ -17,15 +18,15 @@ clean:
 	rm -rf .mypy_cache
 
 lint:
-	flake8 test.py
+	flake8 $(FILES)
 	mypy --warn-return-any \
 	     --warn-unused-ignores \
 	     --ignore-missing-imports \
 	     --disallow-untyped-defs \
-	     --check-untyped-defs test.py
+	     --check-untyped-defs $(FILES)
 
 lint-strict:
-	flake8 test.py
-	mypy --strict test.py
+	flake8 $(FILES)
+	mypy --strict $(FILES)
 
 .PHONY: install run debug clean lint lint-strict

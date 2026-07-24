@@ -1,6 +1,6 @@
 PYTHON = python3
 SCRIPT = a_maze_ing.py
-FILES = test.py mazegen.py a_maze_ing.py
+FILES = test.py mazegen.py a_maze_ing.py parser.py
 CONFIG = config.txt
 
 

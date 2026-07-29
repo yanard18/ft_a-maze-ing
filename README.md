@@ -122,3 +122,22 @@ The purpose of the A-Maze-ing project ia to create our own maze generator and di
 - [ ] show/hide a valif shortest path (entry -> exit)
 - [ ] change maze wall colors
 - [ ] set colors of 42 pattern (opt)
+
+
+# DFS (Depth-First Search):
+- Behavior: Selects a direction and goes as deep as possible along a branch until it hits a wall/dead-end before turning back. (backtracing)
+- Data structure: stack (LIFO) or recursion
+- Complexity: o(n) (since each node is visited just for once)
+
+1. pick a starting cell and mark it as visited. (push its coordinates onto a stack)
+2. check all four directions (N, E, S, W). Filter out any cells that are out of bounds, already visited or blocked (42 pattern, walls, boundaries of the maze etc.)
+3. if valid unvisited neighbors exist, pick one randomly. knock down the shared wall between the current cell and the chosen neighbor.
+4. step into the new cell, mark as visited and push it to the stack
+5. if a cell does not have any valid unvisited neighbors, turn around. remove the current cell from the stack to track back into the previous cell and repeat the second step
+
+algorithm visualizer: https://algorithm-visualizer.org/brute-force/depth-first-search
+visualgo: https://visualgo.net/en/dfsbfs
+geeksforgeeks: https://www.geeksforgeeks.org/dsa/depth-first-search-or-dfs-for-a-graph/
+LeetCode:
+    - Problem 200: Number of Islands
+    - Problem 733: Flood Fill (exam rank 02 level 4)

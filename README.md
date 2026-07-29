@@ -135,9 +135,10 @@ The purpose of the A-Maze-ing project ia to create our own maze generator and di
 4. step into the new cell, mark as visited and push it to the stack
 5. if a cell does not have any valid unvisited neighbors, turn around. remove the current cell from the stack to track back into the previous cell and repeat the second step
 
-algorithm visualizer: https://algorithm-visualizer.org/brute-force/depth-first-search
-visualgo: https://visualgo.net/en/dfsbfs
-geeksforgeeks: https://www.geeksforgeeks.org/dsa/depth-first-search-or-dfs-for-a-graph/
-LeetCode:
+- algorithm visualizer: https://algorithm-visualizer.org/brute-force/depth-first-search
+- visualgo: https://visualgo.net/en/dfsbfs
+- geeksforgeeks: https://www.geeksforgeeks.org/dsa/depth-first-search-or-dfs-for-a-graph/
+- LeetCode:
     - Problem 200: Number of Islands
     - Problem 733: Flood Fill (exam rank 02 level 4)
+- DFS Algo (yt)- https://youtu.be/iaBEKo5sM7w?si=I7s83PjC7uqYPNfp

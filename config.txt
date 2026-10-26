@@ -5,6 +5,5 @@ EXIT=19,14
 OUTPUT_FILE=maze.txt
 PERFECT=True
 
-# SEED
-# ALGORITHM
-# DISPLAY_MODE
+# optional: same seed gives the same maze every run
+# SEED=42

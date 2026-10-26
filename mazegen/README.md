@@ -39,8 +39,11 @@ sequence of mazes is always the same.
 
 A `ValueError` is raised if the size, entry or exit are not valid
 (outside the maze, same cell, on the "42"), or if a non-perfect maze
-is asked on a grid too small for it. If the grid is smaller than 9x7,
-the "42" is skipped and a message is printed.
+is asked on a grid smaller than 9x7. A perfect maze can be any size:
+below 9x7 the "42" is skipped and a message is printed.
+
+The generator uses Python's `random` module, so `seed` also sets the
+global random state.
 
 ## Accessing the maze
 

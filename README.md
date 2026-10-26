@@ -96,11 +96,15 @@ PERFECT=True
 # SEED=42
 ```
 
-The program stops with a clear `Error: ...` message if the file is missing,
-a line has no `=`, a key is missing, unknown or written twice, a value has
-the wrong type, the entry or exit is outside the maze, on the "42" or both
-are the same cell. If the maze is smaller than 9x7, the "42" can't fit: an
-error is printed and the maze is generated without it.
+Other keys are ignored, and if a key is written twice the last value is
+used.
+
+The program stops with a clear `Error: ...` message if the file can't be
+read, a line has no `=`, a key is missing, a value has the wrong type, the
+entry or exit is outside the maze, on the "42" or both are the same cell.
+If the maze is smaller than 9x7, the "42" can't fit: an error is printed
+and the maze is generated without it. A non-perfect maze needs at least
+9x7 cells.
 
 ## Output file
 
@@ -152,8 +156,8 @@ For a **non-perfect** maze, after the DFS:
   in a random direction;
 - a wall is never opened if it creates a 3x3 open area (corridors must stay
   at most 2 cells wide);
-- on very small grids, if there are less than 2 loops, more random walls
-  are opened until there are 2.
+- if the maze ends up with less than 2 loops (very rare), it is generated
+  again.
 
 The shortest path is found with a **BFS** from the entry to the exit.
 
@@ -207,8 +211,8 @@ The whole maze generation is in the `mazegen` package (`mazegen/`), with
 one class: `MazeGenerator`. It doesn't depend on the rest of the project
 (parser, display, output file).
 
-The package is built as `mazegen-1.0.0-py3-none-any.whl` (and
-`mazegen-1.0.0.tar.gz`) at the root of the repository. To build it again
+The package is built as `mazegen-1.0.0-py3-none-any.whl` at the root of
+the repository. To build it again
 from the sources:
 
 ```sh

@@ -3,7 +3,6 @@ from typing import Dict, Optional, Tuple
 
 
 MANDATORY_KEYS = ["WIDTH", "HEIGHT", "ENTRY", "EXIT", "OUTPUT_FILE", "PERFECT"]
-OPTIONAL_KEYS = ["SEED"]
 MAX_SIZE = 200
 
 
@@ -33,27 +32,23 @@ def read_pairs(filepath: str) -> Dict[str, str]:
         filepath: Path of the config file.
 
     Returns:
-        A dict mapping each key to its raw value (both stripped).
+        A dict mapping each key to its value.
 
     Raises:
-        ConfigError: If the file can't be opened or a line is malformed.
+        ConfigError: If the file can't be read or a line is malformed.
     """
-    pairs: Dict[str, str] = {}
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             lines = f.readlines()
-    except FileNotFoundError:
-        raise ConfigError(f"config file not found: {filepath}")
-    except IsADirectoryError:
-        raise ConfigError(f"{filepath} is a directory, not a file")
-    except PermissionError:
-        raise ConfigError(f"permission denied: {filepath}")
-    except UnicodeDecodeError:
-        raise ConfigError(f"{filepath} is not a valid text file")
     except OSError as e:
         raise ConfigError(f"can't read {filepath}: {e.strerror}")
+    except UnicodeDecodeError:
+        raise ConfigError(f"{filepath} is not a text file")
 
-    for line_num, line in enumerate(lines, start=1):
+    pairs: Dict[str, str] = {}
+    line_num = 0
+    for line in lines:
+        line_num += 1
         line = line.strip()
         if line == "" or line.startswith('#'):
             continue
@@ -64,22 +59,15 @@ def read_pairs(filepath: str) -> Dict[str, str]:
         key, value = line.split('=', 1)
         key = key.strip().upper()
         value = value.strip()
-
-        if key == "":
-            raise ConfigError(f"line {line_num}: missing key before '='")
-        if value == "":
-            raise ConfigError(f"line {line_num}: missing value for {key}")
-        if key not in MANDATORY_KEYS and key not in OPTIONAL_KEYS:
-            raise ConfigError(f"line {line_num}: unknown key '{key}'")
-        if key in pairs:
-            raise ConfigError(f"line {line_num}: {key} is defined twice")
+        if key == "" or value == "":
+            raise ConfigError(f"line {line_num}: empty key or value")
         pairs[key] = value
 
     return pairs
 
 
 def parse_int(key: str, value: str) -> int:
-    """Convert a config value to int, with a readable error."""
+    """Convert a config value to int."""
     try:
         return int(value)
     except ValueError:
@@ -131,12 +119,12 @@ def parse_config(filepath: str) -> MazeConfig:
         raise ConfigError(f"WIDTH and HEIGHT can't be more than {MAX_SIZE}")
 
     entry = parse_coords("ENTRY", pairs["ENTRY"])
-    exit_ = parse_coords("EXIT", pairs["EXIT"])
-    for key, (x, y) in (("ENTRY", entry), ("EXIT", exit_)):
-        if not (0 <= x < width and 0 <= y < height):
-            raise ConfigError(f"{key} {x},{y} is outside the maze "
-                              f"({width}x{height})")
-    if entry == exit_:
+    exit_pos = parse_coords("EXIT", pairs["EXIT"])
+    if not (0 <= entry[0] < width and 0 <= entry[1] < height):
+        raise ConfigError(f"ENTRY {pairs['ENTRY']} is outside the maze")
+    if not (0 <= exit_pos[0] < width and 0 <= exit_pos[1] < height):
+        raise ConfigError(f"EXIT {pairs['EXIT']} is outside the maze")
+    if entry == exit_pos:
         raise ConfigError("ENTRY and EXIT must be different cells")
 
     seed = None
@@ -147,7 +135,7 @@ def parse_config(filepath: str) -> MazeConfig:
         width=width,
         height=height,
         entry=entry,
-        exit=exit_,
+        exit=exit_pos,
         output_file=pairs["OUTPUT_FILE"],
         perfect=parse_bool("PERFECT", pairs["PERFECT"]),
         seed=seed,

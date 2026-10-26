@@ -19,7 +19,7 @@ clean:
 
 build:
 	$(PYTHON) -m build
-	cp dist/mazegen-*.whl dist/mazegen-*.tar.gz .
+	cp dist/mazegen-*.whl .
 
 lint:
 	flake8 .

@@ -1,4 +1,3 @@
-import os
 import sys
 
 from display import run_display
@@ -16,16 +15,11 @@ def main() -> int:
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
         return 1
-    config_file = sys.argv[1]
 
     try:
-        config = parse_config(config_file)
+        config = parse_config(sys.argv[1])
     except ConfigError as e:
         print(f"Error: {e}")
-        return 1
-
-    if os.path.abspath(config.output_file) == os.path.abspath(config_file):
-        print("Error: OUTPUT_FILE can't be the config file itself")
         return 1
 
     try:

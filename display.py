@@ -1,27 +1,16 @@
-from typing import List, Set, Tuple
+from typing import Set, Tuple
 
 from mazegen import DIRECTIONS, MazeGenerator
 from output import write_output
 
 
-# ANSI background colours
-COLORS = {
-    "white": "47",
-    "blue": "44",
-    "yellow": "43",
-    "magenta": "45",
-    "gray": "100",
-    "green": "42",
-    "red": "41",
-    "cyan": "46",
-}
-WALL_COLORS = ["white", "blue", "yellow", "magenta"]
-PATTERN_COLORS = ["gray", "blue", "yellow", "magenta", "white"]
-ENTRY_COLOR = "green"
-EXIT_COLOR = "red"
-PATH_COLOR = "cyan"
+# ANSI colour codes: text colours for walls, background colours for cells
+WALL_COLORS = ["37", "34", "33", "35"]          # white, blue, yellow, magenta
+PATTERN_COLORS = ["100", "44", "43", "45"]      # gray, blue, yellow, magenta
+ENTRY_COLOR = "42"                              # green
+EXIT_COLOR = "41"                               # red
+PATH_COLOR = "46"                               # cyan
 
-CLEAR_SCREEN = "\033[2J\033[H"
 MENU = """
 1. Re-generate a new maze
 2. Show/Hide the shortest path
@@ -30,82 +19,76 @@ MENU = """
 5. Quit"""
 
 
-def block(color: str) -> str:
-    """Return one square of the drawing, two spaces wide."""
-    if color == "":
-        return "  "
-    return f"\033[{COLORS[color]}m  \033[0m"
+def paint(text: str, color: str) -> str:
+    """Return text with an ANSI colour."""
+    return "\033[" + color + "m" + text + "\033[0m"
 
 
-def get_path_squares(maze: MazeGenerator) -> Set[Tuple[int, int]]:
-    """Return the drawing squares covered by the solution path.
-
-    The drawing is (2 * width + 1) x (2 * height + 1) squares: the cell
-    (x, y) is the square (2x + 1, 2y + 1) and walls are in between.
-    """
+def get_path_cells(maze: MazeGenerator) -> Set[Tuple[int, int]]:
+    """Return the cells visited by the solution, entry included."""
     x, y = maze.entry
-    squares = {(2 * x + 1, 2 * y + 1)}
+    cells = set()
+    cells.add((x, y))
     for letter in maze.solution:
-        dx, dy, _, _ = DIRECTIONS[letter]
-        squares.add((2 * x + 1 + dx, 2 * y + 1 + dy))
-        x, y = x + dx, y + dy
-        squares.add((2 * x + 1, 2 * y + 1))
-    return squares
+        dx, dy, wall, neigh_wall = DIRECTIONS[letter]
+        x += dx
+        y += dy
+        cells.add((x, y))
+    return cells
 
 
-def is_wall(maze: MazeGenerator, sx: int, sy: int) -> bool:
-    """Tell if the drawing square (sx, sy) is a closed wall."""
-    if sx % 2 == 0 and sy % 2 == 0:
-        return True
-    x, y = sx // 2, sy // 2
-    if sx % 2 == 0:
-        if x < maze.width:
-            return bool(maze.grid[y][x] & 8)
-        return bool(maze.grid[y][x - 1] & 2)
-    if y < maze.height:
-        return bool(maze.grid[y][x] & 1)
-    return bool(maze.grid[y - 1][x] & 4)
+def draw_cell(maze: MazeGenerator, x: int, y: int,
+              path_cells: Set[Tuple[int, int]], pattern_color: str) -> str:
+    """Return the inside of one cell, 3 characters wide."""
+    if (x, y) == maze.entry:
+        return paint("   ", ENTRY_COLOR)
+    if (x, y) == maze.exit:
+        return paint("   ", EXIT_COLOR)
+    if (x, y) in maze.blocked_cells:
+        return paint("   ", pattern_color)
+    if (x, y) in path_cells:
+        return paint("   ", PATH_COLOR)
+    return "   "
 
 
 def render(maze: MazeGenerator, show_path: bool,
            wall_color: str, pattern_color: str) -> str:
-    """Draw the whole maze as a coloured string.
+    """Draw the maze as text, two lines for each row of cells.
 
-    Args:
-        maze: A generated maze.
-        show_path: If True, the shortest path is drawn.
-        wall_color: Colour name for the walls.
-        pattern_color: Colour name for the 42 cells.
-
-    Returns:
-        The drawing, one line per row of squares.
+    The first line has the north walls (+---+), the second one the west
+    walls (|) and the cells. The east and south borders are added at
+    the end of each line and after the last row.
     """
-    path_squares = get_path_squares(maze) if show_path else set()
-    lines: List[str] = []
+    path_cells: Set[Tuple[int, int]] = set()
+    if show_path:
+        path_cells = get_path_cells(maze)
 
-    for sy in range(2 * maze.height + 1):
-        line = ""
-        for sx in range(2 * maze.width + 1):
-            cell = (sx // 2, sy // 2)
-            if sx % 2 == 1 and sy % 2 == 1:
-                if cell == maze.entry:
-                    color = ENTRY_COLOR
-                elif cell == maze.exit:
-                    color = EXIT_COLOR
-                elif cell in maze.blocked_cells:
-                    color = pattern_color
-                elif (sx, sy) in path_squares:
-                    color = PATH_COLOR
-                else:
-                    color = ""
-            elif is_wall(maze, sx, sy):
-                color = wall_color
-            elif (sx, sy) in path_squares:
-                color = PATH_COLOR
+    lines = []
+    for y in range(maze.height):
+        top = ""
+        middle = ""
+        for x in range(maze.width):
+            cell = maze.grid[y][x]
+            top += paint("+", wall_color)
+            if cell & 1:
+                top += paint("---", wall_color)
             else:
-                color = ""
-            line += block(color)
-        lines.append(line)
+                top += "   "
+            if cell & 8:
+                middle += paint("|", wall_color)
+            else:
+                middle += " "
+            middle += draw_cell(maze, x, y, path_cells, pattern_color)
+        top += paint("+", wall_color)
+        middle += paint("|", wall_color)
+        lines.append(top)
+        lines.append(middle)
+
+    bottom = ""
+    for x in range(maze.width):
+        bottom += paint("+---", wall_color)
+    bottom += paint("+", wall_color)
+    lines.append(bottom)
 
     return "\n".join(lines)
 
@@ -125,14 +108,11 @@ def run_display(maze: MazeGenerator, output_file: str) -> None:
     message = ""
 
     while True:
-        print(CLEAR_SCREEN, end="")
         print(render(maze, show_path, WALL_COLORS[wall_index],
                      PATTERN_COLORS[pattern_index]))
-        print(f"\n{block(ENTRY_COLOR)} entry   {block(EXIT_COLOR)} exit   "
-              f"{block(PATH_COLOR)} path")
         print(MENU)
         if message != "":
-            print(f"\n{message}")
+            print("\n" + message)
             message = ""
 
         try:
@@ -157,3 +137,7 @@ def run_display(maze: MazeGenerator, output_file: str) -> None:
             return
         else:
             message = f"Unknown choice '{choice}', type a number from 1 to 5"
+
+        # clear the screen before drawing again. Not done before the first
+        # drawing, so messages printed before (like the 42 error) stay
+        print("\033[2J\033[H", end="")

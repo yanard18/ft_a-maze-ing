@@ -1,9 +1,6 @@
-from collections import deque
 from typing import Dict, List, Optional, Set, Tuple
 import random
 
-
-Cell = Tuple[int, int]
 
 # letter: (dx, dy, wall of the current cell, wall of the neighbour)
 DIRECTIONS = {
@@ -13,7 +10,7 @@ DIRECTIONS = {
     'W': (-1, 0, 8, 2)
 }
 
-# cells of the "42" drawing, as (dx, dy) from its top-left corner
+# cells of the "42" drawing (7x5), as (dx, dy) from its top-left corner
 PATTERN_42 = [
     (0, 0), (0, 1), (0, 2),
     (1, 2), (2, 0), (2, 1),
@@ -23,8 +20,6 @@ PATTERN_42 = [
     (6, 2), (4, 3), (4, 4),
     (5, 4), (6, 4)
 ]
-PATTERN_WIDTH = 7
-PATTERN_HEIGHT = 5
 
 
 class MazeGenerator:
@@ -41,8 +36,8 @@ class MazeGenerator:
     """
 
     def __init__(self, width: int, height: int,
-                 entry: Cell = (0, 0),
-                 exit: Optional[Cell] = None,
+                 entry: Tuple[int, int] = (0, 0),
+                 exit: Optional[Tuple[int, int]] = None,
                  perfect: bool = True,
                  seed: Optional[int] = None) -> None:
         """Set up an empty maze.
@@ -69,23 +64,26 @@ class MazeGenerator:
         self.entry = entry
         self.exit = exit
         self.perfect = perfect
-        self.rng = random.Random(seed)
+        random.seed(seed)
 
         self.grid: List[List[int]] = []
-        self.blocked_cells: Set[Cell] = set()
+        self.blocked_cells: Set[Tuple[int, int]] = set()
         self.solution = ""
 
-        for name, (x, y) in (("entry", entry), ("exit", exit)):
-            if not self.in_bounds(x, y):
-                raise ValueError(f"{name} {x},{y} is outside the maze")
+        if not self.in_bounds(entry[0], entry[1]):
+            raise ValueError("entry is outside the maze")
+        if not self.in_bounds(exit[0], exit[1]):
+            raise ValueError("exit is outside the maze")
         if entry == exit:
             raise ValueError("entry and exit must be different")
+        if not perfect and (width < 9 or height < 7):
+            raise ValueError("a non-perfect maze needs at least 9x7 cells")
 
         self.embed_42_pattern()
-        for name, cell in (("entry", entry), ("exit", exit)):
-            if cell in self.blocked_cells:
-                raise ValueError(f"{name} {cell[0]},{cell[1]} is on the "
-                                 f"42 pattern")
+        if entry in self.blocked_cells:
+            raise ValueError("entry is on the 42 pattern")
+        if exit in self.blocked_cells:
+            raise ValueError("exit is on the 42 pattern")
 
     def in_bounds(self, x: int, y: int) -> bool:
         """Tell if (x, y) is inside the maze."""
@@ -98,18 +96,17 @@ class MazeGenerator:
     def embed_42_pattern(self) -> None:
         """Mark the cells of the centred "42" as blocked.
 
-        The pattern needs a free cell all around it, otherwise it could
-        cut the maze in parts. If the maze is too small, an error is
-        printed and the maze is made without it.
+        The pattern needs a free cell all around it, so the maze must be
+        at least 9x7. If it's smaller, an error is printed and the maze
+        is made without it.
         """
-        if (self.width < PATTERN_WIDTH + 2
-                or self.height < PATTERN_HEIGHT + 2):
+        if self.width < 9 or self.height < 7:
             print("Error: maze is too small to draw the 42 pattern, "
                   "generating it without")
             return
 
-        start_x = (self.width - PATTERN_WIDTH) // 2
-        start_y = (self.height - PATTERN_HEIGHT) // 2
+        start_x = (self.width - 7) // 2
+        start_y = (self.height - 5) // 2
         for dx, dy in PATTERN_42:
             self.blocked_cells.add((start_x + dx, start_y + dy))
 
@@ -118,28 +115,30 @@ class MazeGenerator:
 
         Calling it again gives a different maze, but the sequence of
         mazes is the same for a given seed.
-
-        Raises:
-            ValueError: If a non-perfect maze can't fit in this size.
         """
-        self.grid = []
-        for _ in range(self.height):
-            row: List[int] = []
-            for _ in range(self.width):
-                row.append(15)
-            self.grid.append(row)
+        while True:
+            self.grid = []
+            for _ in range(self.height):
+                row: List[int] = []
+                for _ in range(self.width):
+                    row.append(15)
+                self.grid.append(row)
 
-        self.carve_paths()
-        if not self.perfect:
+            self.carve_paths()
+            if self.perfect:
+                break
             self.remove_dead_ends()
-            self.add_loops(2)
+            # very rare, but a non-perfect maze needs at least 2 loops
+            if self.count_loops() >= 2:
+                break
+
         self.solution = self.solve()
 
     def carve_paths(self) -> None:
         """Carve a perfect maze with a randomized DFS from the entry."""
-        start = self.entry
-        visited: Set[Cell] = {start}
-        stack: List[Cell] = [start]
+        visited: Set[Tuple[int, int]] = set()
+        visited.add(self.entry)
+        stack: List[Tuple[int, int]] = [self.entry]
 
         while len(stack) > 0:
             curr_x, curr_y = stack[-1]
@@ -153,7 +152,7 @@ class MazeGenerator:
                         (neigh_x, neigh_y, curr_wall, neigh_wall))
 
             if len(unvisited_neighbors) > 0:
-                neigh_x, neigh_y, curr_wall, neigh_wall = self.rng.choice(
+                neigh_x, neigh_y, curr_wall, neigh_wall = random.choice(
                     unvisited_neighbors)
 
                 self.grid[curr_y][curr_x] &= ~curr_wall
@@ -165,57 +164,28 @@ class MazeGenerator:
                 stack.pop()
 
     def remove_dead_ends(self) -> None:
-        """Open one more wall in each dead-end, where possible.
-
-        A wall is not opened if it would make a 3x3 open area.
-        """
+        """Open one more wall in each dead-end, where possible."""
         cells = []
         for y in range(self.height):
             for x in range(self.width):
                 if self.is_free(x, y):
                     cells.append((x, y))
-        self.rng.shuffle(cells)
+        random.shuffle(cells)
 
         for x, y in cells:
             if self.count_open_walls(x, y) != 1:
                 continue
-            letters = list(DIRECTIONS.keys())
-            self.rng.shuffle(letters)
+            letters = ['N', 'E', 'S', 'W']
+            random.shuffle(letters)
             for letter in letters:
                 if self.open_wall(x, y, letter):
                     break
 
-    def add_loops(self, min_loops: int) -> None:
-        """Open random walls until the maze has at least min_loops loops.
-
-        Raises:
-            ValueError: If the maze is too small to get enough loops.
-        """
-        loops = self.count_loops()
-        if loops >= min_loops:
-            return
-
-        walls = []
-        for y in range(self.height):
-            for x in range(self.width):
-                if self.is_free(x, y):
-                    walls.append((x, y, 'E'))
-                    walls.append((x, y, 'S'))
-        self.rng.shuffle(walls)
-
-        for x, y, letter in walls:
-            if self.open_wall(x, y, letter):
-                loops += 1
-                if loops >= min_loops:
-                    return
-        raise ValueError("maze is too small to be non-perfect, "
-                         "try a bigger size or PERFECT=True")
-
     def open_wall(self, x: int, y: int, letter: str) -> bool:
-        """Open the wall of (x, y) in the given direction.
+        """Open the wall of (x, y) in the direction of letter.
 
-        The wall stays closed if it is already open, if it is on the
-        border or the 42, or if opening it makes a 3x3 open area.
+        The wall stays closed if it's already open, if it's on the border
+        or the 42, or if opening it makes a 3x3 open area.
 
         Returns:
             True if the wall was opened.
@@ -231,6 +201,7 @@ class MazeGenerator:
         self.grid[neigh_y][neigh_x] &= ~neigh_wall
 
         if self.has_open_area(x, y):
+            # put the wall back
             self.grid[y][x] |= curr_wall
             self.grid[neigh_y][neigh_x] |= neigh_wall
             return False
@@ -246,8 +217,9 @@ class MazeGenerator:
 
     def is_open_area(self, left: int, top: int) -> bool:
         """Tell if the 3x3 square starting at (left, top) is all open."""
-        if not (self.in_bounds(left, top)
-                and self.in_bounds(left + 2, top + 2)):
+        if not self.in_bounds(left, top):
+            return False
+        if not self.in_bounds(left + 2, top + 2):
             return False
         for y in range(top, top + 3):
             for x in range(left, left + 3):
@@ -260,13 +232,17 @@ class MazeGenerator:
     def count_open_walls(self, x: int, y: int) -> int:
         """Count the open sides of the cell (x, y)."""
         count = 0
-        for (_, _, wall, _) in DIRECTIONS.values():
+        for wall in [1, 2, 4, 8]:
             if not self.grid[y][x] & wall:
                 count += 1
         return count
 
     def count_loops(self) -> int:
-        """Count the independent loops: passages - cells + 1."""
+        """Count the loops of the maze.
+
+        A maze without loops has exactly (cells - 1) passages. Each extra
+        passage adds one loop.
+        """
         cells = 0
         passages = 0
         for y in range(self.height):
@@ -278,7 +254,7 @@ class MazeGenerator:
                     passages += 1
                 if not self.grid[y][x] & 4:
                     passages += 1
-        return passages - cells + 1
+        return passages - (cells - 1)
 
     def solve(self) -> str:
         """Find the shortest path from entry to exit with a BFS.
@@ -287,16 +263,18 @@ class MazeGenerator:
             The path as a string of 'N', 'E', 'S', 'W' moves,
             or an empty string if the exit can't be reached.
         """
-        parent: Dict[Cell, Cell] = {}
-        move: Dict[Cell, str] = {}
-        visited: Set[Cell] = {self.entry}
-        queue = deque([self.entry])
+        parent: Dict[Tuple[int, int], Tuple[int, int]] = {}
+        move: Dict[Tuple[int, int], str] = {}
+        visited: Set[Tuple[int, int]] = set()
+        visited.add(self.entry)
+        queue: List[Tuple[int, int]] = [self.entry]
 
         while len(queue) > 0:
-            curr_x, curr_y = queue.popleft()
+            curr_x, curr_y = queue.pop(0)
             if (curr_x, curr_y) == self.exit:
                 break
-            for letter, (dx, dy, wall, _) in DIRECTIONS.items():
+            for letter in DIRECTIONS:
+                dx, dy, wall, neigh_wall = DIRECTIONS[letter]
                 if self.grid[curr_y][curr_x] & wall:
                     continue
                 neigh = (curr_x + dx, curr_y + dy)
@@ -308,13 +286,12 @@ class MazeGenerator:
 
         if self.exit not in visited:
             return ""
-        path = []
+        path = ""
         cell = self.exit
         while cell != self.entry:
-            path.append(move[cell])
+            path = move[cell] + path
             cell = parent[cell]
-        path.reverse()
-        return "".join(path)
+        return path
 
     def to_hex(self) -> List[str]:
         """Return the maze as rows of hex digits, one digit per cell."""

@@ -1,11 +1,10 @@
 PYTHON = python3
 SCRIPT = a_maze_ing.py
-FILES = test.py mazegen.py a_maze_ing.py parser.py
 CONFIG = config.txt
 
 
 install:
-	$(PYTHON) -m pip install flake8 mypy
+	$(PYTHON) -m pip install flake8 mypy build
 
 run:
 	$(PYTHON) $(SCRIPT) $(CONFIG)
@@ -14,19 +13,20 @@ debug:
 	$(PYTHON) -m pdb $(SCRIPT) $(CONFIG)
 
 clean:
-	rm -rf __pycache__
+	rm -rf __pycache__ */__pycache__
 	rm -rf .mypy_cache
+	rm -rf build dist *.egg-info
 
 lint:
-	flake8 $(FILES)
-	mypy --warn-return-any \
-	     --warn-unused-ignores \
-	     --ignore-missing-imports \
-	     --disallow-untyped-defs \
-	     --check-untyped-defs $(FILES)
+	flake8 .
+	mypy . --warn-return-any \
+	       --warn-unused-ignores \
+	       --ignore-missing-imports \
+	       --disallow-untyped-defs \
+	       --check-untyped-defs
 
 lint-strict:
-	flake8 $(FILES)
-	mypy --strict $(FILES)
+	flake8 .
+	mypy . --strict
 
 .PHONY: install run debug clean lint lint-strict

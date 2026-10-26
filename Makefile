@@ -17,6 +17,10 @@ clean:
 	rm -rf .mypy_cache
 	rm -rf build dist *.egg-info
 
+build:
+	$(PYTHON) -m build
+	cp dist/mazegen-*.whl dist/mazegen-*.tar.gz .
+
 lint:
 	flake8 .
 	mypy . --warn-return-any \
@@ -29,4 +33,4 @@ lint-strict:
 	flake8 .
 	mypy . --strict
 
-.PHONY: install run debug clean lint lint-strict
+.PHONY: install run debug clean build lint lint-strict

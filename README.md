@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by yanard.*
+*This project has been created as part of the 42 curriculum by dyanar, ekablan.*
 
 # A-Maze-ing
 
@@ -328,6 +328,7 @@ It changed on the way:
 - [MIT License - choosealicense.com](https://choosealicense.com/licenses/mit/)
 - [ANSI escape codes - Wikipedia](https://en.wikipedia.org/wiki/ANSI_escape_code)
 - [Context managers - GeeksforGeeks](https://www.geeksforgeeks.org/python/context-manager-in-python)
+
 
 ### How AI was used
 

@@ -1,3 +1,5 @@
+"""Terminal display of the maze and the interactive menu."""
+
 from typing import Set, Tuple
 
 from mazegen import DIRECTIONS, MazeGenerator

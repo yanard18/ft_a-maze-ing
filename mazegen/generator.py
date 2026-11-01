@@ -1,3 +1,5 @@
+"""MazeGenerator class: build, braid and solve a random maze."""
+
 from typing import Dict, List, Optional, Set, Tuple
 import random
 

@@ -10,7 +10,7 @@ readme = "mazegen/README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE.md"]
-authors = [{ name = "yanard" }]
+authors = [{ name = "dyanar" }, { name = "ekablan" }]
 
 [tool.setuptools]
 packages = ["mazegen"]

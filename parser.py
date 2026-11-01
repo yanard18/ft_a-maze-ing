@@ -1,3 +1,5 @@
+"""Read and validate the KEY=VALUE configuration file."""
+
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 

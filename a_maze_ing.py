@@ -1,3 +1,5 @@
+"""Main program: read the config, generate the maze, save and show it."""
+
 import sys
 
 from display import run_display

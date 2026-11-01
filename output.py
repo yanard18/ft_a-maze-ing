@@ -1,3 +1,5 @@
+"""Write a generated maze to the output file."""
+
 from mazegen import MazeGenerator
 
 

@@ -134,7 +134,7 @@ EESENEEESENEEEEESEESSENEEENNESSSSWWWSWNWSSSENESSSWSESSESSENNNESSS
 
 ## Maze generation algorithm
 
-I used a **randomized depth-first search** (also called recursive
+We used a **randomized depth-first search** (also called recursive
 backtracker), written with a stack instead of recursion:
 
 1. Start with all walls closed. The cells of the "42" are marked as
@@ -275,23 +275,24 @@ package.
 
 ### Roles
 
-I did this project alone, so I had every role: design, code, tests and
-documentation.
+We are a team of two: dyanar and ekablan. We worked on the whole project
+together the entire time and made every decision together, so we shared
+every role: design, code, tests and documentation.
 
 ### Planning
 
 The first plan was the flowchart above: parse the config, build the grid,
-add the "42", generate, solve, write the file, then the display. I started
-with the parts I understood best: the grid, the "42" pattern and the DFS.
+add the "42", generate, solve, write the file, then the display. We started
+with the parts we understood best: the grid, the "42" pattern and the DFS.
 
 It changed on the way:
 
-- the parser was first a quick test script, then I rewrote it with real
-  validation when I saw how many error cases the subject asks for;
-- I thought the non-perfect mode would be a second algorithm, but in the
+- the parser was first a quick test script, then we rewrote it with real
+  validation when we saw how many error cases the subject asks for;
+- we thought the non-perfect mode would be a second algorithm, but in the
   end it's the DFS plus a step that removes dead-ends;
-- the 3x3 open area rule came later, when I read the subject again;
-- I wrote the output file before the display, to check every maze with
+- the 3x3 open area rule came later, when we read the subject again;
+- we wrote the output file before the display, to check every maze with
   `maze_analyzer.py` early;
 - packaging was left for the end, which meant moving `mazegen.py` into a
   `mazegen/` folder.
@@ -314,7 +315,7 @@ It changed on the way:
 - git, Make, venv
 - flake8 and mypy
 - `maze_analyzer.py` (given with the subject)
-- Claude Code (see below)
+- AI tools (see "How AI was used" below)
 
 ## Resources
 
@@ -332,17 +333,8 @@ It changed on the way:
 
 ### How AI was used
 
-I used Claude Code (Anthropic) during the second half of the project:
-
-- to compare my code with the subject and make a step by step plan of
-  what was missing;
-- to help write the config parser validation, the non-perfect mode
-  (dead-end removal, 3x3 check, extra loops), the BFS solver, the output
-  file, the terminal display, the main script and the packaging files;
-- to test the generated mazes on many sizes and seeds with
-  `maze_analyzer.py`;
-- to draft this README.
-
-The grid structure, the "42" pattern and the DFS generation were written
-by me before that. I reviewed and tested everything the AI wrote, and I
-can explain every part of the code.
+- In accordance with Chapter II of the project subject, AI tools were
+  used as supportive assistants during the learning process, to get a
+  better understanding of complicated concepts such as the mathematical
+  mechanisms behind the bitwise wall encoding.
+- AI was used to help shape this README.md.
